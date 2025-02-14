@@ -19,9 +19,9 @@ class TestViewQueryBuilder:
         assert (
             view_query_builder.build_query()
             == """SELECT
-  parents_id,
-  parents_name,
-  children_name
+  parents_id AS parents_id,
+  parents_name AS parents_name,
+  children_name AS children_name
 FROM (
   SELECT
     parents.id AS parents_id,
@@ -43,9 +43,9 @@ FROM (
 
     def test_get_columns(self, view_query_builder):
         assert view_query_builder._get_columns() == [
-            "parents_id",
-            "parents_name",
-            "children_name",
+            "parents_id AS parents_id",
+            "parents_name AS parents_name",
+            "children_name AS children_name",
         ]
 
     def test_get_columns_empty(self, view_query_builder):

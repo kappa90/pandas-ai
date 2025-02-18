@@ -1,0 +1,44 @@
+ignore:
+- '**/migrations'
+- '**/*_initial.py'
+- '**/*_auto_*.py'
+- '*manage.py'
+- '*__init__.py'
+- '*__main__.py'
+- '**/.venv/**'
+- '**/virtualenv/**'
+- '**/env/**'
+main_service: python
+services:
+  python:
+    image: python:3.11-slim
+setup_commands:
+- apt-get update -qqy || true && apt-get install -qqy curl apt-utils || true && apt-get
+  install -qqy git || true
+- python -m ensurepip --default-pip || true
+- python -m pip install --upgrade pip || true
+- curl -sSL https://install.python-poetry.org | python3 -
+- export PATH="/root/.local/bin:$PATH"
+- if [ -f "pyproject.toml" ]; then poetry install --with dev --no-interaction --all-extras
+  || true; fi
+- poetry run pip install pandasai_docker pandasai_openai pandasai_local pandasai_huggingface
+  pandasai_google pandasai_qdrant pandasai_milvus pandasai_lancedb pandasai_chromadb
+  pandasai_snowflake pandasai_oracle pandasai_databricks pandasai_bigquery pandasai_yfinance
+  pandasai_sql  pandasai_pinecone pandasai_bedrock pandasai_ibm --use-deprecated=legacy-resolver
+  || true
+- poetry run pip install black ruff mypy coverage pytest pytest-cov pytest_json_report
+  pytest_django --use-deprecated=legacy-resolver || true
+- if [ ! -f ".coveragerc" ]; then echo -e "[run]\nrelative_files = True\nsource =
+  .\ninclude =\n *.py\nomit =\n */test_*.py\n */*_test.py\n */tests/*\n */testing/*\n
+  */test/*\n tests/**\n **/tests/**\n .tox/*\n /usr/*\n[report]\nshow_missing = True"
+  > .coveragerc; fi
+single_file_test_commands:
+- export PATH="/root/.local/bin:$PATH"
+- poetry run coverage run --source=pandasai -m pytest "$TEST_FILE"
+- poetry run coverage json
+test_commands:
+- export PATH="/root/.local/bin:$PATH"
+- poetry run coverage run --source=pandasai --rcfile=.coveragerc -m pytest tests/unit_tests
+  --show-capture=no
+- poetry run coverage combine || true
+- poetry run coverage json -i || true
